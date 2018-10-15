@@ -22,6 +22,7 @@ namespace PracticaCV6
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = this;
         }
         
         public event PropertyChangedEventHandler PropertyChanged;
@@ -40,7 +41,7 @@ namespace PracticaCV6
         }
 
         Bitmap loadedImage;
-        Grayscale grayscale = new Grayscale(0.9, 0.9, 0.9);
+        Grayscale grayscale = new Grayscale(1, 1, 1);
         GaussianBlur filter = new GaussianBlur();
         Subtract subtract = new Subtract();
         private Bitmap NewImage(Bitmap selectedImage)
@@ -70,14 +71,15 @@ namespace PracticaCV6
             {
                 var resultImage = NewImage(loadedImage);
                 var rotated = Rotate(resultImage);
-                var horizontalStatistics = new HorizontalIntensityStatistics(rotated);
+                var secondFilter = filter.Apply(rotated);
+                var horizontalStatistics = new HorizontalIntensityStatistics(secondFilter);
                 var gray = horizontalStatistics.Gray.Values;
                 Histo.Dispatcher.Invoke(() =>
                 {
                     GetPoints(gray, HistoPoints);
                     Histo.InvalidatePlot(true);
                 });
-                result.Dispatcher.Invoke(() => result.Source = GetImage(resultImage));
+                result.Dispatcher.Invoke(() => result.Source = GetImage(secondFilter));
             }
         }
 

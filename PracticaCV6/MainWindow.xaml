@@ -19,11 +19,15 @@
                 <Button Content="Load file" Click="OpenFile_Click" />
             </StackPanel>
         </StackPanel>
-        <StackPanel Grid.Column="1">
-            <Image Name="result" />
-            <oxy:Plot Title="Histogram" Name="Histo" Grid.Column="3">
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Image Grid.Column="1" Name="result" />
+            <oxy:Plot Grid.Column="1" Grid.Row="1" Title="Histogram" Name="Histo">
                 <oxy:LineSeries Color="Blue" ItemsSource="{Binding HistoPoints, Mode=TwoWay}" />
             </oxy:Plot>
-        </StackPanel>
+        </Grid>
     </Grid>
 </Window>
