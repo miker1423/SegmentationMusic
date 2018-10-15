@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -7,6 +8,9 @@ using System.Windows.Media.Imaging;
 using Accord.Imaging;
 using Accord.Imaging.Filters;
 using Microsoft.Win32;
+using OxyPlot;
+using System.Linq;
+using System.ComponentModel;
 
 namespace PracticaCV6
 {
@@ -18,6 +22,21 @@ namespace PracticaCV6
         public MainWindow()
         {
             InitializeComponent();
+        }
+        
+        public event PropertyChangedEventHandler PropertyChanged;
+        private ObservableCollection<DataPoint> _histoPoints = new ObservableCollection<DataPoint>();
+        public ObservableCollection<DataPoint> HistoPoints
+        {
+            get => _histoPoints;
+            set
+            {
+                if (_histoPoints != value)
+                {
+                    _histoPoints = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HistoPoints)));
+                }
+            }
         }
 
         Bitmap loadedImage;
@@ -32,6 +51,19 @@ namespace PracticaCV6
             return subtract.Apply(partialResult);
         }
 
+        private void GetPoints(int[] values, ObservableCollection<DataPoint> collection)
+        {
+            collection.Clear();
+            int max = values.Max();
+
+            collection.Add(new DataPoint(0, max));
+            for (int i = 0; i < values.Length; i++)
+            {
+                collection.Add(new DataPoint(i, max - values[i]));
+            }
+            collection.Add(new DataPoint(values.Length - 1, max));
+        }
+
         private void ApplyFilter_Click(object sender, RoutedEventArgs e)
         {
             if(loadedImage != null)
@@ -40,6 +72,11 @@ namespace PracticaCV6
                 var rotated = Rotate(resultImage);
                 var horizontalStatistics = new HorizontalIntensityStatistics(rotated);
                 var gray = horizontalStatistics.Gray.Values;
+                Histo.Dispatcher.Invoke(() =>
+                {
+                    GetPoints(gray, HistoPoints);
+                    Histo.InvalidatePlot(true);
+                });
                 result.Dispatcher.Invoke(() => result.Source = GetImage(resultImage));
             }
         }
@@ -51,7 +88,7 @@ namespace PracticaCV6
         {
             using (var ms = new MemoryStream())
             {
-                bitmap.Save(ms, ImageFormat.Bmp);
+                bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
                 ms.Position = 0;
                 var bitmapImage = new BitmapImage();
                 bitmapImage.BeginInit();
